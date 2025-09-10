@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative AI Tool for Clinical Consultations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: The application is structured as a single-page, thematic interactive proposal. It starts with the core problem, presents the solution via an interactive workflow, dives into the key technologies (Automation and GraphRAG) using visualizations and comparative toggles, addresses the project's evaluation criteria, and concludes. This non-linear, section-based structure with a sticky navigation bar allows users (like investors or reviewers) to explore the concept based on their interests, making the information more digestible and engaging than a linear document. The focus is on demonstrating the 'why' (problem), 'what' (solution), and 'how' (technology) in a clear, interactive narrative. -->
+    <!-- Visualization & Content Choices: 
+        1. Consultation Workflow: Report Info -> Tool's process steps. Goal -> Organize/Inform. Viz -> Interactive multi-step diagram (HTML/CSS/JS). Interaction -> Clicking on a step reveals a detailed explanation. Justification -> Visually breaks down a complex process into manageable, explorable parts.
+        2. Time Efficiency: Report Info -> Manual (30-45 min) vs. AI (30 sec) task time. Goal -> Compare. Viz -> Bar Chart (Chart.js/Canvas). Interaction -> Hover for tooltips. Justification -> A bar chart provides an immediate, powerful visual comparison of the dramatic time savings.
+        3. RAG Technology: Report Info -> GraphRAG vs. Vector Search capabilities. Goal -> Compare/Inform. Viz -> Interactive toggle with diagrams (HTML/CSS/JS). Interaction -> User clicks a button to switch between two explanatory views. Justification -> This directly contrasts the two technologies, making their distinct advantages for this specific medical use case clear and easy to grasp.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+            color: #343A40;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #007BFF;
+            border-bottom-color: #007BFF;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .step-item {
+            cursor: pointer;
+        }
+        .step-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            opacity: 0;
+        }
+        .step-content.active {
+            max-height: 500px;
+            opacity: 1;
+        }
+        .tech-toggle-btn {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .tech-toggle-btn.active {
+            background-color: #007BFF;
+            color: white;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800">Clinical AI Assistant</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#introduction" class="nav-link text-gray-600 pb-1">Introduction</a>
+                <a href="#solution" class="nav-link text-gray-600 pb-1">How It Works</a>
+                <a href="#technology" class="nav-link text-gray-600 pb-1">Core Tech</a>
+                <a href="#evaluation" class="nav-link text-gray-600 pb-1">Evaluation</a>
+            </div>
+             <button id="mobile-menu-button" class="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100">
+                <span class="block w-6 h-0.5 bg-current"></span>
+                <span class="block w-6 h-0.5 bg-current mt-1.5"></span>
+                <span class="block w-6 h-0.5 bg-current mt-1.5"></span>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+             <a href="#introduction" class="block py-2 text-gray-600">Introduction</a>
+             <a href="#solution" class="block py-2 text-gray-600">How It Works</a>
+             <a href="#technology" class="block py-2 text-gray-600">Core Tech</a>
+             <a href="#evaluation" class="block py-2 text-gray-600">Evaluation</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="introduction" class="text-center min-h-[60vh] flex flex-col justify-center items-center">
+            <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Reimagining the Doctor-Patient Conversation</h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600 mb-8">
+                Doctors face immense pressure, spending significant time on administrative tasks rather than patient care. This tool aims to solve this meaningful problem by leveraging Generative AI to automate documentation, analyze conversations, and provide clinical decision support, ultimately enhancing patient outcomes and reducing physician burnout.
+            </p>
+            <div class="flex items-center justify-center p-4 bg-blue-100/50 rounded-full w-24 h-24 mx-auto">
+                <span class="text-5xl">🩺</span>
+            </div>
+        </section>
+
+        <section id="solution" class="py-16 md:py-24">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">The Solution: An End-to-End Workflow</h2>
+                <p class="max-w-2xl mx-auto mt-4 text-gray-600">
+                    Our proposed tool provides a seamless, automated process from conversation to prescription. This interactive diagram walks you through each stage of the AI-powered clinical workflow. Click on each step to learn more about its function and the technology involved.
+                </p>
+            </div>
+            <div class="max-w-4xl mx-auto">
+                <div id="workflow-steps">
+                    <!-- Steps will be injected here by JS -->
+                </div>
+            </div>
+        </section>
+        
+        <section id="technology" class="py-16 md:py-24 bg-white rounded-xl">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">Under the Hood: Core Technologies</h2>
+                <p class="max-w-2xl mx-auto mt-4 text-gray-600">
+                    Two key AI concepts power our clinical assistant: advanced automation to streamline tasks and a sophisticated knowledge graph approach for deeper, more reliable data analysis. Explore how these technologies work together to deliver accurate and efficient results.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-start">
+                <div class="card p-8">
+                    <h3 class="text-2xl font-semibold mb-4 text-center">AI-Powered Automation</h3>
+                    <p class="text-gray-600 mb-6">By automating the manual, time-consuming process of note-taking and documentation, our tool frees up clinicians to focus entirely on the patient. The chart below illustrates the dramatic efficiency gains, reducing a task that takes over 30 minutes to mere seconds.</p>
+                    <div class="chart-container">
+                        <canvas id="automationChart"></canvas>
+                    </div>
+                </div>
+                <div class="card p-8">
+                    <h3 class="text-2xl font-semibold mb-4 text-center">GraphRAG: Beyond Simple Search</h3>
+                     <p class="text-gray-600 mb-6">Standard AI models can find keywords, but clinical data requires understanding complex relationships. We use GraphRAG to build a knowledge graph, enabling the AI to reason across connections (e.g., patient-symptom-drug interactions) for safer, more accurate insights. Select a method below to compare.</p>
+                    <div class="flex justify-center mb-6 rounded-lg p-1 bg-gray-100">
+                        <button id="btn-vector" class="tech-toggle-btn w-1/2 p-2 rounded-md text-sm font-medium">Vector Search</button>
+                        <button id="btn-graph" class="tech-toggle-btn active w-1/2 p-2 rounded-md text-sm font-medium">GraphRAG</button>
+                    </div>
+                    <div id="tech-content-container">
+                        <!-- Content changes based on toggle -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="evaluation" class="py-16 md:py-24">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">Project Evaluation Criteria</h2>
+                <p class="max-w-2xl mx-auto mt-4 text-gray-600">
+                    This project was conceived to meet key criteria for innovation, feasibility, and impact. We believe it represents a significant step forward in applying AI to solve real-world healthcare challenges.
+                </p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="card p-8">
+                    <div class="flex items-center justify-center bg-green-100 rounded-full w-16 h-16 mx-auto mb-4">
+                        <span class="text-3xl">🎯</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-center mb-2">Problem Relevance</h3>
+                    <p class="text-gray-600 text-center">Addresses the critical and widespread issues of physician burnout and administrative overhead, which directly impact patient care quality and healthcare system efficiency. It's a real, meaningful problem.</p>
+                </div>
+                <div class="card p-8">
+                    <div class="flex items-center justify-center bg-yellow-100 rounded-full w-16 h-16 mx-auto mb-4">
+                        <span class="text-3xl">🛠️</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-center mb-2">Idea Feasibility</h3>
+                    <p class="text-gray-600 text-center">The project is highly achievable for a skilled team. By leveraging existing, powerful APIs for speech-to-text, LLMs, and knowledge graph creation, the core technical challenges are manageable and focus on integration.</p>
+                </div>
+                <div class="card p-8">
+                    <div class="flex items-center justify-center bg-purple-100 rounded-full w-16 h-16 mx-auto mb-4">
+                        <span class="text-3xl">🤖</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-center mb-2">Thoughtful API Use</h3>
+                    <p class="text-gray-600 text-center">The proposal creatively combines multiple AI capabilities—not just using one API, but orchestrating them in a workflow (transcription, analysis, GraphRAG, generation) to create a tool that is more than the sum of its parts.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>&copy; 2025 Clinical AI Assistant Initiative. A conceptual project exploring the future of healthcare.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+            
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.5
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+
+            const workflowData = [
+                { title: 'Record & Transcribe', icon: '🎤', description: 'The tool securely records the doctor-patient conversation with consent. A speech-to-text API (like OpenAI Whisper) instantly transcribes the dialogue into accurate, readable text.' },
+                { title: 'Analyze & Recognize', icon: '🧠', description: 'The transcribed text is processed by a Large Language Model (LLM). It identifies key entities like symptoms, patient history, medications mentioned, and potential diagnoses.' },
+                { title: 'Structure with GraphRAG', icon: '🔗', description: 'Instead of just a list of keywords, the AI structures the recognized entities into a knowledge graph. This captures the relationships between them, providing crucial context for accurate recommendations.' },
+                { title: 'Generate Prescription Draft', icon: '📝', description: 'Using the structured knowledge graph and a pre-defined doctor\'s template, the AI generates a comprehensive draft. This includes symptoms, recommended medications, precautions, and suggestions for further tests or referrals.' },
+                { title: 'Doctor Review & Finalize', icon: '🧑‍⚕️', description: 'The AI-generated draft is presented to the doctor for review, editing, and final approval. The doctor remains in complete control, using the tool as a powerful assistant, not a replacement.' }
+            ];
+
+            const workflowContainer = document.getElementById('workflow-steps');
+            workflowData.forEach((step, index) => {
+                const isLast = index === workflowData.length - 1;
+                const stepElement = document.createElement('div');
+                stepElement.innerHTML = `
+                    <div class="step-item flex items-center" data-index="${index}">
+                        <div class="flex-shrink-0 flex flex-col items-center">
+                            <div class="flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 text-2xl">${step.icon}</div>
+                            ${!isLast ? '<div class="w-px h-16 bg-blue-200"></div>' : ''}
+                        </div>
+                        <div class="ml-6 flex-grow pb-${!isLast ? '16' : '0'}">
+                            <h4 class="text-xl font-semibold">${step.title}</h4>
+                        </div>
+                    </div>
+                    <div class="step-content ml-18 pl-1" data-index="${index}">
+                        <div class="border-l-2 border-blue-200 pl-8 pb-8">
+                           <p class="text-gray-600">${step.description}</p>
+                        </div>
+                    </div>
+                `;
+                workflowContainer.appendChild(stepElement);
+            });
+            
+            workflowContainer.addEventListener('click', (e) => {
+                const stepItem = e.target.closest('.step-item');
+                if (stepItem) {
+                    const index = stepItem.dataset.index;
+                    const content = document.querySelector(`.step-content[data-index="${index}"]`);
+                    const allContents = document.querySelectorAll('.step-content');
+                    
+                    const wasActive = content.classList.contains('active');
+
+                    allContents.forEach(c => c.classList.remove('active'));
+                    
+                    if (!wasActive) {
+                        content.classList.add('active');
+                    }
+                }
+            });
+
+
+            const ctx = document.getElementById('automationChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Manual Documentation', 'AI-Powered Workflow'],
+                    datasets: [{
+                        label: 'Time Taken (minutes)',
+                        data: [37.5, 0.5],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Time in Minutes'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + ' minutes';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const techContent = {
+                vector: {
+                    title: 'Relies on Keyword Similarity',
+                    description: 'Vector search is good for finding text that is semantically similar. It might find "dizziness" and "lightheadedness" but struggles to understand that one is a symptom of a specific condition mentioned elsewhere in the conversation. It can miss relational context.',
+                    diagram: `
+                        <div class="text-center p-4 border rounded-lg bg-gray-50">
+                            <span class="font-mono bg-yellow-100 px-2 py-1 rounded">"Patient feels dizzy"</span>
+                            <div class="text-3xl my-2">↓</div>
+                            <span class="font-mono bg-gray-200 px-2 py-1 rounded">Similar concepts: "lightheaded", "vertigo"</span>
+                            <p class="text-sm mt-2 text-red-500">Misses link to medication side-effect.</p>
+                        </div>
+                    `
+                },
+                graph: {
+                    title: 'Understands Relationships',
+                    description: 'GraphRAG builds a network of connections. It knows "dizziness" is a symptom, reported by this specific "patient", and is a known side-effect of the "medication" they were prescribed. This allows for multi-step reasoning and safer analysis.',
+                    diagram: `
+                        <div class="p-4 border rounded-lg bg-gray-50 text-sm">
+                           <div class="flex justify-center items-center space-x-2">
+                               <span class="font-mono bg-blue-100 px-2 py-1 rounded">Patient</span>
+                               <span class="font-bold text-blue-500">→ reports →</span>
+                               <span class="font-mono bg-yellow-100 px-2 py-1 rounded">Dizziness</span>
+                           </div>
+                           <div class="text-2xl text-center my-1 text-blue-500">↑</div>
+                           <div class="flex justify-center items-center space-x-2">
+                               <span class="font-mono bg-red-100 px-2 py-1 rounded">Medication</span>
+                               <span class="font-bold text-blue-500">→ has side-effect →</span>
+                               <span class="font-mono bg-yellow-100 px-2 py-1 rounded">Dizziness</span>
+                           </div>
+                        </div>
+                    `
+                }
+            };
+            
+            const btnVector = document.getElementById('btn-vector');
+            const btnGraph = document.getElementById('btn-graph');
+            const techContainer = document.getElementById('tech-content-container');
+
+            function updateTechContent(type) {
+                const content = techContent[type];
+                techContainer.innerHTML = `
+                    <h4 class="text-lg font-semibold mb-2">${content.title}</h4>
+                    <p class="text-gray-600 mb-4 text-sm">${content.description}</p>
+                    ${content.diagram}
+                `;
+                if (type === 'vector') {
+                    btnVector.classList.add('active');
+                    btnGraph.classList.remove('active');
+                } else {
+                    btnGraph.classList.add('active');
+                    btnVector.classList.remove('active');
+                }
+            }
+            
+            btnVector.addEventListener('click', () => updateTechContent('vector'));
+            btnGraph.addEventListener('click', () => updateTechContent('graph'));
+
+            updateTechContent('graph');
+
+        });
+    </script>
+</body>
+</html>
